@@ -29,8 +29,7 @@ class NodeGraphMenu(object):
         self._qmenu = qmenu
 
     def __repr__(self):
-        return '<{}("{}") object at {}>'.format(
-            self.__class__.__name__, self.name(), hex(id(self)))
+        return f'<{self.__class__.__name__}("{self.name()}") object at {hex(id(self))}>'
 
     @property
     def qmenu(self):
@@ -61,8 +60,7 @@ class NodeGraphMenu(object):
         Returns:
             NodeGraphQt.NodeGraphMenu: menu item.
         """
-        menu = self.qmenu.get_menu(name)
-        if menu:
+        if menu := self.qmenu.get_menu(name):
             return NodeGraphMenu(self._graph, menu)
 
     def get_command(self, name):
@@ -220,8 +218,7 @@ class NodeGraphCommand(object):
         self._qaction = qaction
 
     def __repr__(self):
-        return '<{}("{}") object at {}>'.format(
-            self.__class__.__name__, self.name(), hex(id(self)))
+        return f'<{self.__class__.__name__}("{self.name()}") object at {hex(id(self))}>'
 
     @property
     def qaction(self):

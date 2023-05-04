@@ -105,8 +105,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
         self.COLLIDING_state = False
 
     def __repr__(self):
-        return '{}.{}()'.format(
-            self.__module__, self.__class__.__name__)
+        return f'{self.__module__}.{self.__class__.__name__}()'
 
     # --- private ---
 
@@ -122,12 +121,10 @@ class NodeViewer(QtWidgets.QGraphicsView):
             return
         scale = (0.9 + sensitivity) if value < 0.0 else (1.1 - sensitivity)
         zoom = self.get_zoom()
-        if ZOOM_MIN >= zoom:
-            if scale == 0.9:
-                return
-        if ZOOM_MAX <= zoom:
-            if scale == 1.1:
-                return
+        if ZOOM_MIN >= zoom and scale == 0.9:
+            return
+        if ZOOM_MAX <= zoom and scale == 1.1:
+            return
         self.scale(scale, scale, pos)
 
     def _set_viewer_pan(self, pos_x, pos_y):
@@ -198,8 +195,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
         if self._ctx_node_menu.isEnabled():
             pos = self.mapToScene(self._previous_pos)
             items = self._items_near(pos)
-            nodes = [i for i in items if isinstance(i, AbstractNodeItem)]
-            if nodes:
+            if nodes := [i for i in items if isinstance(i, AbstractNodeItem)]:
                 node = nodes[0]
                 ctx_menu = self._ctx_node_menu.get_menu(node.type_, node.id)
                 if ctx_menu:
@@ -227,7 +223,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
         self._origin_pos = event.pos()
         self._previous_pos = event.pos()
         self._prev_selection_nodes, \
-        self._prev_selection_pipes = self.selected_items()
+            self._prev_selection_pipes = self.selected_items()
 
         # close tab search
         if self._search_widget.isVisible():
@@ -255,11 +251,10 @@ class NodeViewer(QtWidgets.QGraphicsView):
 
         # toggle extend node selection.
         if self.LMB_state:
-            if self.SHIFT_state:
-                for node in nodes:
+            for node in nodes:
+                if self.SHIFT_state:
                     node.selected = not node.selected
-            elif self.CTRL_state:
-                for node in nodes:
+                elif self.CTRL_state:
                     node.selected = False
 
         # update the recorded node positions.
@@ -372,11 +367,11 @@ class NodeViewer(QtWidgets.QGraphicsView):
                 for node in self._prev_selection_nodes:
                     node.selected = True
 
-                if self.CTRL_state:
-                    for pipe in pipes:
-                        pipe.setSelected(False)
-                    for node in nodes:
-                        node.selected = False
+            if self.CTRL_state:
+                for pipe in pipes:
+                    pipe.setSelected(False)
+                for node in nodes:
+                    node.selected = False
 
         elif self.LMB_state:
             self.COLLIDING_state = False
@@ -389,8 +384,10 @@ class NodeViewer(QtWidgets.QGraphicsView):
                     if isinstance(item, Pipe) and item.isVisible():
                         if not item.input_port:
                             continue
-                        if not item.input_port.node is node and \
-                                not item.output_port.node is node:
+                        if (
+                            item.input_port.node is not node
+                            and item.output_port.node is not node
+                        ):
                             item.setSelected(True)
                             self.COLLIDING_state = True
                             break
@@ -485,10 +482,6 @@ class NodeViewer(QtWidgets.QGraphicsView):
             event (QtWidgets.QGraphicsScenePressEvent):
                 The event handler from the QtWidgets.QGraphicsScene
         """
-        # pipe slicer enabled.
-        if self.ALT_state and self.SHIFT_state:
-            return
-        # viewer pan mode.
         if self.ALT_state:
             return
         if self._LIVE_PIPE.isVisible():
@@ -496,8 +489,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             return
 
         pos = event.scenePos()
-        port_items = self._items_near(pos, PortItem, 5, 5)
-        if port_items:
+        if port_items := self._items_near(pos, PortItem, 5, 5):
             port = port_items[0]
             if not port.multi_connection and port.connected_ports:
                 self._detached_port = port.connected_ports[0]
@@ -506,8 +498,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
                 [p.delete() for p in port.connected_pipes]
             return
 
-        node_items = self._items_near(pos, AbstractNodeItem, 3, 3)
-        if node_items:
+        if node_items := self._items_near(pos, AbstractNodeItem, 3, 3):
             node = node_items[0]
 
             # record the node positions at selection time.
@@ -522,8 +513,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             if not isinstance(node, BackdropNodeItem):
                 return
 
-        pipe_items = self._items_near(pos, Pipe, 3, 3)
-        if pipe_items:
+        if pipe_items := self._items_near(pos, Pipe, 3, 3):
             if not self.LMB_state:
                 return
             pipe = pipe_items[0]
@@ -567,13 +557,14 @@ class NodeViewer(QtWidgets.QGraphicsView):
 
         self._start_port.hovered = False
 
-        # find the end port.
-        end_port = None
-        for item in self.scene().items(event.scenePos()):
-            if isinstance(item, PortItem):
-                end_port = item
-                break
-
+        end_port = next(
+            (
+                item
+                for item in self.scene().items(event.scenePos())
+                if isinstance(item, PortItem)
+            ),
+            None,
+        )
         connected = []
         disconnected = []
 
@@ -710,8 +701,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             return
 
         pos = self._previous_pos
-        state = not self._search_widget.isVisible()
-        if state:
+        if state := not self._search_widget.isVisible():
             rect = self._search_widget.rect()
             new_pos = QtCore.QPoint(pos.x() - rect.width() / 2,
                                     pos.y() - rect.height() / 2)
@@ -735,20 +725,16 @@ class NodeViewer(QtWidgets.QGraphicsView):
         messageBox(text, title, QtWidgets.QMessageBox.Ok)
 
     def load_dialog(self, current_dir=None, ext=None):
-        ext = '*{} '.format(ext) if ext else ''
-        ext_filter = ';;'.join([
-            'Node Graph ({}*json)'.format(ext), 'All Files (*)'
-        ])
+        ext = f'*{ext} ' if ext else ''
+        ext_filter = ';;'.join([f'Node Graph ({ext}*json)', 'All Files (*)'])
         file_dlg = file_dialog.getOpenFileName(
             self, 'Open File', current_dir, ext_filter)
-        file = file_dlg[0] or None
-        return file
+        return file_dlg[0] or None
 
     def save_dialog(self, current_dir=None, ext=None):
-        ext_label = '*{} '.format(ext) if ext else ''
-        ext_type = '.{}'.format(ext) if ext else '.json'
-        ext_map = {'Node Graph ({}*json)'.format(ext_label): ext_type,
-                   'All Files (*)': ''}
+        ext_label = f'*{ext} ' if ext else ''
+        ext_type = f'.{ext}' if ext else '.json'
+        ext_map = {f'Node Graph ({ext_label}*json)': ext_type, 'All Files (*)': ''}
         file_dlg = file_dialog.getSaveFileName(
             self, 'Save Session', current_dir, ';;'.join(ext_map.keys()))
         file_path = file_dlg[0]
@@ -761,29 +747,31 @@ class NodeViewer(QtWidgets.QGraphicsView):
         return file_path
 
     def all_pipes(self):
-        pipes = []
         excl = [self._LIVE_PIPE, self._SLICER_PIPE]
-        for item in self.scene().items():
-            if isinstance(item, Pipe) and item not in excl:
-                pipes.append(item)
-        return pipes
+        return [
+            item
+            for item in self.scene().items()
+            if isinstance(item, Pipe) and item not in excl
+        ]
 
     def all_nodes(self):
-        nodes = []
-        for item in self.scene().items():
-            if isinstance(item, AbstractNodeItem):
-                nodes.append(item)
-        return nodes
+        return [
+            item
+            for item in self.scene().items()
+            if isinstance(item, AbstractNodeItem)
+        ]
 
     def selected_nodes(self):
-        nodes = [item for item in self.scene().selectedItems() \
-                 if isinstance(item, AbstractNodeItem)]
-        return nodes
+        return [
+            item
+            for item in self.scene().selectedItems()
+            if isinstance(item, AbstractNodeItem)
+        ]
 
     def selected_pipes(self):
-        pipes = [item for item in self.scene().selectedItems() \
-                 if isinstance(item, Pipe)]
-        return pipes
+        return [
+            item for item in self.scene().selectedItems() if isinstance(item, Pipe)
+        ]
 
     def selected_items(self):
         nodes = []
@@ -877,12 +865,13 @@ class NodeViewer(QtWidgets.QGraphicsView):
             self.reset_zoom()
             return
         zoom = self.get_zoom()
-        if zoom < 0.0:
-            if not (ZOOM_MIN <= zoom <= ZOOM_MAX):
-                return
-        else:
-            if not (ZOOM_MIN <= value <= ZOOM_MAX):
-                return
+        if (
+            zoom < 0.0
+            and not (ZOOM_MIN <= zoom <= ZOOM_MAX)
+            or zoom >= 0.0
+            and not (ZOOM_MIN <= value <= ZOOM_MAX)
+        ):
+            return
         value = value - zoom
         self._set_viewer_zoom(value, 0.0)
 

@@ -22,8 +22,7 @@ class PortModel(object):
         self.connected_ports = defaultdict(list)
 
     def __repr__(self):
-        return '<{}(\'{}\') @ {}>'.format(
-            self.__class__.__name__, self.name, hex(id(self)))
+        return f"<{self.__class__.__name__}(\'{self.name}\') @ {hex(id(self))}>"
 
     @property
     def to_dict(self):
@@ -110,11 +109,9 @@ class NodeModel(object):
         tab = tab or 'Properties'
 
         if name in self.properties.keys():
-            raise NodePropertyError(
-                '"{}" reserved for default property.'.format(name))
+            raise NodePropertyError(f'"{name}" reserved for default property.')
         if name in self._custom_prop.keys():
-            raise NodePropertyError(
-                '"{}" property already exists.'.format(name))
+            raise NodePropertyError(f'"{name}" property already exists.')
 
         self._custom_prop[name] = value
 
@@ -167,8 +164,7 @@ class NodeModel(object):
     def get_tab_name(self, name):
         model = self._graph_model
         if model is None:
-            attrs = self._TEMP_property_attrs.get(name)
-            if attrs:
+            if attrs := self._TEMP_property_attrs.get(name):
                 return attrs[name].get('tab')
             return
         return model.get_node_common_properties(self.type_)[name]['tab']
@@ -231,21 +227,17 @@ class NodeModel(object):
         inputs = {}
         outputs = {}
         for name, model in node_dict.pop('inputs').items():
-            connected_ports = model.to_dict['connected_ports']
-            if connected_ports:
+            if connected_ports := model.to_dict['connected_ports']:
                 inputs[name] = connected_ports
         for name, model in node_dict.pop('outputs').items():
-            connected_ports = model.to_dict['connected_ports']
-            if connected_ports:
+            if connected_ports := model.to_dict['connected_ports']:
                 outputs[name] = connected_ports
         if inputs:
             node_dict['inputs'] = inputs
         if outputs:
             node_dict['outputs'] = outputs
 
-        custom_props = node_dict.pop('_custom_prop', {})
-
-        if custom_props:
+        if custom_props := node_dict.pop('_custom_prop', {}):
             # exclude the data which can not be serialized (like numpy array)
             to_remove = []
             types = [float, str, int, list, dict, bool, None, complex, tuple]

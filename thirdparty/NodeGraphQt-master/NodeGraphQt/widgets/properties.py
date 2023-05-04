@@ -66,7 +66,7 @@ class PropColorPicker(BaseProperty):
         self._button.setStyleSheet(
             '''QPushButton {{background-color: rgba({0}, {1}, {2}, 255);}}
                QPushButton::hover {{background-color: rgba({0}, {1}, {2}, 200);}}'''.format(*c))
-        self._button.setToolTip('rgb: {}\nhex: {}'.format(self._color[:3], hex_color))
+        self._button.setToolTip(f'rgb: {self._color[:3]}\nhex: {hex_color}')
 
     def get_value(self):
         return self._color[:3]
@@ -295,8 +295,7 @@ class PropFilePath(BaseProperty):
 
     def _on_select_file(self):
         file_path = file_dialog.getOpenFileName(self, ext_filter=self._ext)
-        file = file_path[0] or None
-        if file:
+        if file := file_path[0] or None:
             self.set_value(file)
 
     def _on_value_change(self, value=None):
@@ -340,8 +339,7 @@ class _valueMenu(QtWidgets.QMenu):
         self.mouseMove.emit(event)
         super(_valueMenu, self).mouseMoveEvent(event)
 
-        action = self.actionAt(event.pos())
-        if action:
+        if action := self.actionAt(event.pos()):
             if action is not self.last_action:
                 self.stepChange.emit()
             self.last_action = action
@@ -358,10 +356,7 @@ class _valueMenu(QtWidgets.QMenu):
 
     def set_data_type(self, dt):
         if dt is int:
-            new_steps = []
-            for step in self.steps:
-                if "." not in str(step):
-                    new_steps.append(step)
+            new_steps = [step for step in self.steps if "." not in str(step)]
             self.set_steps(new_steps)
         elif dt is float:
             self.set_steps(self.steps)
@@ -448,7 +443,7 @@ class _valueEdit(QtWidgets.QLineEdit):
 
     def value(self):
         if self.text().startswith("."):
-            text = "0" + self.text()
+            text = f"0{self.text()}"
             self.setText(text)
         return self._convert_text(self.text())
 
@@ -688,7 +683,9 @@ WIDGET_MAP = {
 def registerPropType(name, prop_class, override=False):
     global WIDGET_MAP
     if name in WIDGET_MAP.keys() and not override:
-        raise Exception("Prop type {} has already exists, u can use override=True to override)".format(name))
+        raise Exception(
+            f"Prop type {name} has already exists, u can use override=True to override)"
+        )
     WIDGET_MAP[name] = prop_class
 
 # main property widgets.
@@ -707,7 +704,7 @@ class PropWindow(QtWidgets.QWidget):
         layout.addLayout(self.__layout)
 
     def __repr__(self):
-        return '<PropWindow object at {}>'.format(hex(id(self)))
+        return f'<PropWindow object at {hex(id(self))}>'
 
     def add_widget(self, name, widget, value, label=None):
         """
@@ -801,7 +798,7 @@ class NodePropWidget(QtWidgets.QWidget):
         self._read_node(node)
 
     def __repr__(self):
-        return '<NodePropWidget object at {}>'.format(hex(id(self)))
+        return f'<NodePropWidget object at {hex(id(self))}>'
 
     def _on_close(self):
         """
@@ -856,7 +853,7 @@ class NodePropWidget(QtWidgets.QWidget):
                 widget.setMinimumHeight(min_widget_height)
                 if prop_name in common_props.keys():
                     if 'items' in common_props[prop_name].keys():
-                        _prop_name = '_' + prop_name + "_"
+                        _prop_name = f'_{prop_name}_'
                         if node.has_property(_prop_name):
                             widget.set_items(node.get_property(_prop_name))
                         else:
@@ -928,7 +925,7 @@ class NodePropWidget(QtWidgets.QWidget):
             PropWindow: tab child widget.
         """
         if name in self.__tab_windows.keys():
-            raise AssertionError('Tab name {} already taken!'.format(name))
+            raise AssertionError(f'Tab name {name} already taken!')
         self.__tab_windows[name] = PropWindow(self)
         self.__tab.addTab(self.__tab_windows[name], name)
         return self.__tab_windows[name]
@@ -946,8 +943,7 @@ class NodePropWidget(QtWidgets.QWidget):
         if name == 'name':
             return self.name_wgt
         for tab_name, prop_win in self.__tab_windows.items():
-            widget = prop_win.get_widget(name)
-            if widget:
+            if widget := prop_win.get_widget(name):
                 return widget
 
 

@@ -60,8 +60,7 @@ class NodeObject(object):
         self._view.id = self._model.id
 
     def __repr__(self):
-        return '<{}("{}") object at {}>'.format(
-            self.__class__.__name__, self.NODE_NAME, hex(id(self)))
+        return f'<{self.__class__.__name__}("{self.NODE_NAME}") object at {hex(id(self))}>'
 
     @classproperty
     def type_(cls):
@@ -72,7 +71,7 @@ class NodeObject(object):
         Returns:
             str: node type.
         """
-        return cls.__identifier__ + '.' + cls.__name__
+        return f'{cls.__identifier__}.{cls.__name__}'
 
     @property
     def id(self):
@@ -659,8 +658,7 @@ class BaseNode(NodeObject):
             NodeGraphQt.Port: the created port object.
         """
         if name in self.inputs().keys():
-            raise PortRegistrationError(
-                'port name "{}" already registered.'.format(name))
+            raise PortRegistrationError(f'port name "{name}" already registered.')
         view = self.view.add_input(name, multi_input, display_name)
         if color:
             view.color = color
@@ -689,8 +687,7 @@ class BaseNode(NodeObject):
             NodeGraphQt.Port: the created port object.
         """
         if name in self.outputs().keys():
-            raise PortRegistrationError(
-                'port name "{}" already registered.'.format(name))
+            raise PortRegistrationError(f'port name "{name}" already registered.')
         view = self.view.add_output(name, multi_output, display_name)
         if color:
             view.color = color
@@ -709,7 +706,7 @@ class BaseNode(NodeObject):
             return
         old_value = self.get_property(name)
         self.set_property(name, items)
-        _name = '_' + name + "_"
+        _name = f'_{name}_'
         if not self.has_property(_name):
             self.create_property(_name, items)
         else:
@@ -808,10 +805,10 @@ class BaseNode(NodeObject):
         Returns:
             dict: {<input_port>: <node_list>}
         """
-        nodes = {}
-        for p in self.input_ports():
-            nodes[p] = [cp.node() for cp in p.connected_ports()]
-        return nodes
+        return {
+            p: [cp.node() for cp in p.connected_ports()]
+            for p in self.input_ports()
+        }
 
     def connected_output_nodes(self):
         """
@@ -820,10 +817,10 @@ class BaseNode(NodeObject):
         Returns:
             dict: {<output_port>: <node_list>}
         """
-        nodes = {}
-        for p in self.output_ports():
-            nodes[p] = [cp.node() for cp in p.connected_ports()]
-        return nodes
+        return {
+            p: [cp.node() for cp in p.connected_ports()]
+            for p in self.output_ports()
+        }
 
     def on_input_connected(self, in_port, out_port):
         """
@@ -884,7 +881,7 @@ class BaseNode(NodeObject):
                 try:
                     node.run()
                 except Exception as error:
-                    print("Error Update Streams: %s" % str(error))
+                    print(f"Error Update Streams: {str(error)}")
 
     def run(self):
         """

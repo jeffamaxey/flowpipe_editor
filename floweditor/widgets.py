@@ -14,8 +14,7 @@ class AvailableNodesView(QtWidgets.QListView):
         super(AvailableNodesView, self).__init__(parent=parent)
 
     def selectionChanged(self, selected, deselected):
-        indexes = self.selectedIndexes()
-        if indexes:
+        if indexes := self.selectedIndexes():
             self.selection_changed.emit(indexes[0])
         else:
             self.selection_changed.emit(None)

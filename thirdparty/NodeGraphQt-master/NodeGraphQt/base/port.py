@@ -26,7 +26,7 @@ class Port(object):
 
     def __repr__(self):
         port = str(self.__class__.__name__)
-        return '<{}("{}") object at {}>'.format(port, self.name(), hex(id(self)))
+        return f'<{port}("{self.name()}") object at {hex(id(self))}>'
 
     @property
     def view(self):
@@ -107,7 +107,7 @@ class Port(object):
         self.model.visible = visible
         label = 'show' if visible else 'hide'
         undo_stack = self.node().graph.undo_stack()
-        undo_stack.beginMacro('{} port {}'.format(label, self.name()))
+        undo_stack.beginMacro(f'{label} port {self.name()}')
 
         for port in self.connected_ports():
             undo_stack.push(PortDisconnectedCmd(self, port))
@@ -161,11 +161,14 @@ class Port(object):
                 undo_stack.push(NodeInputDisconnectedCmd(self, port))
             return
 
-        if graph.acyclic() and viewer.acyclic_check(self.view, port.view):
-            if pre_conn_port:
-                undo_stack.push(PortDisconnectedCmd(self, pre_conn_port))
-                undo_stack.push(NodeInputDisconnectedCmd(self, pre_conn_port))
-                return
+        if (
+            graph.acyclic()
+            and viewer.acyclic_check(self.view, port.view)
+            and pre_conn_port
+        ):
+            undo_stack.push(PortDisconnectedCmd(self, pre_conn_port))
+            undo_stack.push(NodeInputDisconnectedCmd(self, pre_conn_port))
+            return
 
         trg_conn_ports = port.connected_ports()
         if not port.multi_connection() and trg_conn_ports:

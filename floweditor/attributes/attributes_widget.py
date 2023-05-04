@@ -48,10 +48,7 @@ class AttributesWidget(QtWidgets.QWidget):
         self.attributes = {}
         for name, in_ in schema.items():
             type_ = in_.get("type")
-            if name in values:
-                value = values[name]
-            else:
-                value = in_.get("default")
+            value = values[name] if name in values else in_.get("default")
             editable = in_.get("editable")
             tooltip = in_.get("tooltip")
             plug = plugs.get(name)
@@ -62,7 +59,4 @@ class AttributesWidget(QtWidgets.QWidget):
                 self.attributes[name] = widget
 
     def serialize(self):
-        data = {}
-        for name, widget in self.attributes.items():
-            data[name] = widget.value()
-        return data
+        return {name: widget.value() for name, widget in self.attributes.items()}

@@ -214,8 +214,7 @@ class NodeItem(AbstractNodeItem):
         super(NodeItem, self).mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        viewer = self.viewer()
-        if viewer:
+        if viewer := self.viewer():
             viewer.node_double_clicked.emit(self.id)
         super(NodeItem, self).mouseDoubleClickEvent(event)
 
@@ -231,10 +230,10 @@ class NodeItem(AbstractNodeItem):
         return super(NodeItem, self).itemChange(change, value)
 
     def _tooltip_disable(self, state):
-        tooltip = '<b>{}</b>'.format(self.name)
+        tooltip = f'<b>{self.name}</b>'
         if state:
             tooltip += ' <font color="red"><b>(DISABLED)</b></font>'
-        tooltip += '<br/>{}<br/>'.format(self.type_)
+        tooltip += f'<br/>{self.type_}<br/>'
         self.setToolTip(tooltip)
 
     def _set_base_size(self, add_w=0.0, add_h=0.0):
@@ -306,12 +305,8 @@ class NodeItem(AbstractNodeItem):
         height = self._text_item.boundingRect().height()
 
         if self._widgets:
-            wid_width = max([
-                w.boundingRect().width() for w in self._widgets.values()
-            ])
-            if width < wid_width:
-                width = wid_width
-
+            wid_width = max(w.boundingRect().width() for w in self._widgets.values())
+            width = max(width, wid_width)
         port_height = 0.0
         if self._input_items:
             input_widths = []
@@ -384,8 +379,7 @@ class NodeItem(AbstractNodeItem):
         """
         if not self._widgets:
             return
-        wid_heights = sum(
-            [w.boundingRect().height() for w in self._widgets.values()])
+        wid_heights = sum(w.boundingRect().height() for w in self._widgets.values())
         pos_y = self._height / 2
         pos_y -= wid_heights / 2
         pos_y += v_offset
@@ -406,9 +400,7 @@ class NodeItem(AbstractNodeItem):
         txt_offset = PORT_FALLOFF - 2
         spacing = 1
 
-        # adjust input position
-        inputs = [p for p in self.inputs if p.isVisible()]
-        if inputs:
+        if inputs := [p for p in self.inputs if p.isVisible()]:
             port_width = inputs[0].boundingRect().width()
             port_height = inputs[0].boundingRect().height()
             port_x = (port_width / 2) * -1
@@ -422,9 +414,7 @@ class NodeItem(AbstractNodeItem):
                 txt_x = port.boundingRect().width() / 2 - txt_offset
                 text.setPos(txt_x, port.y() - 1.5)
 
-        # adjust output position
-        outputs = [p for p in self.outputs if p.isVisible()]
-        if outputs:
+        if outputs := [p for p in self.outputs if p.isVisible()]:
             port_width = outputs[0].boundingRect().width()
             port_height = outputs[0].boundingRect().height()
             port_x = width - (port_width / 2)
@@ -548,14 +538,14 @@ class NodeItem(AbstractNodeItem):
     @AbstractNodeItem.width.setter
     def width(self, width=0.0):
         w, h = self.calc_size()
-        width = width if width > w else w
+        width = max(width, w)
         AbstractNodeItem.width.fset(self, width)
 
     @AbstractNodeItem.height.setter
     def height(self, height=0.0):
         w, h = self.calc_size()
-        h = 70 if h < 70 else h
-        height = height if height > h else h
+        h = max(h, 70)
+        height = max(height, h)
         AbstractNodeItem.height.fset(self, height)
 
     @AbstractNodeItem.disabled.setter
@@ -687,10 +677,9 @@ class NodeItem(AbstractNodeItem):
         self._widgets[widget.name] = widget
 
     def get_widget(self, name):
-        widget = self._widgets.get(name)
-        if widget:
+        if widget := self._widgets.get(name):
             return widget
-        raise NodeWidgetError('node has no widget "{}"'.format(name))
+        raise NodeWidgetError(f'node has no widget "{name}"')
 
     def has_widget(self, name):
         return name in self._widgets.keys()

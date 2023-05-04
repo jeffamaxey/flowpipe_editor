@@ -34,7 +34,7 @@ def discover_nodes(paths=NODE_PATHS):
 
             mod_name, mod_ext = os.path.splitext(fname)
 
-            if not mod_ext == ".py":
+            if mod_ext != ".py":
                 continue
 
             module = imp.load_source(mod_name, abspath)

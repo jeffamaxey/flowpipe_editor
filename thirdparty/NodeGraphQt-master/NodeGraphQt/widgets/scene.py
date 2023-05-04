@@ -18,9 +18,7 @@ class NodeScene(QtWidgets.QGraphicsScene):
         self.setBackgroundBrush(self._bg_qcolor)
 
     def __repr__(self):
-        return '{}.{}(\'{}\')'.format(self.__module__,
-                                      self.__class__.__name__,
-                                      self.viewer())
+        return f"{self.__module__}.{self.__class__.__name__}(\'{self.viewer()}\')"
 
     def _draw_grid(self, painter, rect, pen, grid_size):
         left = int(rect.left())
@@ -31,8 +29,10 @@ class NodeScene(QtWidgets.QGraphicsScene):
         first_left = left - (left % grid_size)
         first_top = top - (top % grid_size)
 
-        lines = []
-        lines.extend([QtCore.QLine(x, top, x, bottom) for x in range(first_left, right, grid_size)])
+        lines = [
+            QtCore.QLine(x, top, x, bottom)
+            for x in range(first_left, right, grid_size)
+        ]
         lines.extend([QtCore.QLine(left, y, right, y) for y in range(first_top, bottom, grid_size)])
 
         painter.setPen(pen)

@@ -17,10 +17,10 @@ class CryptoColors(object):
             return self.colors[text]
         h = hashlib.sha256(text.encode('utf-8')).hexdigest()
         d = int('0xFFFFFFFFFFFFFFFF', 0)
-        r = int(Min + (int("0x" + h[:16], 0) / d) * (Max - Min))
-        g = int(Min + (int("0x" + h[16:32], 0) / d) * (Max - Min))
-        b = int(Min + (int("0x" + h[32:48], 0) / d) * (Max - Min))
-        a = int(Min + (int("0x" + h[48:], 0) / d) * (Max - Min))
+        r = int(Min + int(f"0x{h[:16]}", 0) / d * (Max - Min))
+        g = int(Min + int(f"0x{h[16:32]}", 0) / d * (Max - Min))
+        b = int(Min + int(f"0x{h[32:48]}", 0) / d * (Max - Min))
+        a = int(Min + int(f"0x{h[48:]}", 0) / d * (Max - Min))
         self.colors[text] = (r, g, b, 255)
         return self.colors[text]
 
@@ -163,13 +163,15 @@ class AutoNode(BaseNode, QtCore.QObject):
         # None type port can connect with any other type port
         # types in self.matchTypes can connect with each other
 
-        if hasattr(to_port, "DataType") and hasattr(from_port, "DataType"):
-            if to_port.DataType is not from_port.DataType:
-                for types in self.matchTypes:
-                    if to_port.DataType in types and from_port.DataType in types:
-                        return True
-                return False
-
+        if (
+            hasattr(to_port, "DataType")
+            and hasattr(from_port, "DataType")
+            and to_port.DataType is not from_port.DataType
+        ):
+            return any(
+                to_port.DataType in types and from_port.DataType in types
+                for types in self.matchTypes
+            )
         return True
 
     def set_property(self, name, value):
@@ -202,7 +204,9 @@ class AutoNode(BaseNode, QtCore.QObject):
             current_port.color = self._cryptoColors.get(str(value_type))
             conn_type = 'multi' if current_port.multi_connection() else 'single'
             data_type_name = value_type.__name__ if value_type else "all"
-            current_port.view.setToolTip('{}: {} ({}) '.format(current_port.name(), data_type_name, conn_type))
+            current_port.view.setToolTip(
+                f'{current_port.name()}: {data_type_name} ({conn_type}) '
+            )
 
     def create_property(self, name, value, items=None, range=None,
                         widget_type=NODE_PROP, tab=None, ext=None, funcs=None):
@@ -249,16 +253,16 @@ class AutoNode(BaseNode, QtCore.QObject):
 
         self._error = True
         self.set_property('color', self.errorColor)
-        tooltip = '<font color="red"><br>({})</br></font>'.format(message)
+        tooltip = f'<font color="red"><br>({message})</br></font>'
         self._update_tool_tip(tooltip)
 
     def _update_tool_tip(self, message=None):
         if message is None:
             tooltip = self._toolTip.format(self._cookTime)
         else:
-            tooltip = '<b>{}</b>'.format(self.name())
+            tooltip = f'<b>{self.name()}</b>'
             tooltip += message
-            tooltip += '<br/>{}<br/>'.format(self._view.type_)
+            tooltip += f'<br/>{self._view.type_}<br/>'
         self.view.setToolTip(tooltip)
         return tooltip
 

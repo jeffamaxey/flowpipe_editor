@@ -220,8 +220,7 @@ class FlowEditor(QtWidgets.QMainWindow, floweditor_ui.Ui_FlowEditorWindow):
         index = -1
         for node in self.graph.nodes:
             if node.name.startswith(name):
-                numbers = re.findall(r"(\d+$)", node.name)
-                if numbers:
+                if numbers := re.findall(r"(\d+$)", node.name):
                     if int(numbers[0]) + 1 > index:
                         index = int(numbers[0]) + 1
                 else:
@@ -289,24 +288,14 @@ class FlowEditor(QtWidgets.QMainWindow, floweditor_ui.Ui_FlowEditorWindow):
         self.node_type_label.setText(self.selected_fp_node.__class__.__name__)
         self.description_textedit.setPlainText(utils.dedent_doc(self.selected_fp_node.__doc__))
 
-        inputs = {}
-        for name, in_ in self.selected_fp_node.inputs.items():
-            if in_._sub_plugs:
-                inputs[name] = {}
-                for sub_name, sub_plug in in_._sub_plugs.items():
-                    inputs[name][sub_name] = sub_plug
-            else:
-                inputs[name] = in_
-
-        outputs = {}
-        for name, out in self.selected_fp_node.outputs.items():
-            if out._sub_plugs:
-                outputs[name] = {}
-                for sub_name, sub_plug in out._sub_plugs.items():
-                    outputs[name][sub_name] = sub_plug
-            else:
-                outputs[name] = out
-
+        inputs = {
+            name: dict(in_._sub_plugs.items()) if in_._sub_plugs else in_
+            for name, in_ in self.selected_fp_node.inputs.items()
+        }
+        outputs = {
+            name: dict(out._sub_plugs.items()) if out._sub_plugs else out
+            for name, out in self.selected_fp_node.outputs.items()
+        }
         # Code
         #
         if isinstance(self.selected_fp_node, FunctionNode):
@@ -377,11 +366,14 @@ class FlowEditor(QtWidgets.QMainWindow, floweditor_ui.Ui_FlowEditorWindow):
         self.errors_widget.setEnabled(False)
 
     def edit_node_name(self):
-        if len(self.graph_viewer.selected_nodes()) == 1:
-            if self.name_lineedit.text() not in [n.name for n in self.graph.nodes]:
-                self.graph_viewer.selected_nodes()[0].name = self.name_lineedit.text()
-                fp_node = self.fp_nodes_map[self.graph_viewer.selected_nodes()[0].id]
-                fp_node.name = self.name_lineedit.text()
+        if len(
+            self.graph_viewer.selected_nodes()
+        ) == 1 and self.name_lineedit.text() not in [
+            n.name for n in self.graph.nodes
+        ]:
+            self.graph_viewer.selected_nodes()[0].name = self.name_lineedit.text()
+            fp_node = self.fp_nodes_map[self.graph_viewer.selected_nodes()[0].id]
+            fp_node.name = self.name_lineedit.text()
 
     def connection_changed(self, disconnected, connected):
         for connection in connected:
@@ -453,9 +445,9 @@ class FlowEditor(QtWidgets.QMainWindow, floweditor_ui.Ui_FlowEditorWindow):
         self.graph = graph
         self.graph_name_lineedit.setText(graph.name)
         x = 0
+        x_diff = 250
         for row in graph.evaluation_matrix:
             y = 0
-            x_diff = 250
             for fp_node in row:
                 self._add_node(fp_node, QtCore.QPoint(x, y))
                 y += 150
